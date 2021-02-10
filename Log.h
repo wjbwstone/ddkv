@@ -1,8 +1,12 @@
-#pragma once
+/* SPDX-License-Identifier: Proprietary
+ *
+ * Yunhe Enmo (Beijing) Information Technology Co., Ltd.
+ * Copyright (c) 2020 , All rights reserved.
+ *
+ */
 
-/*******************************************************************
-*@brief  : 该头文件请拷贝至工作项目中，注意修改日志名 Example
-********************************************************************/
+#ifndef _H_DDKV_LOG_2021_02_10_19_35_37
+#define _H_DDKV_LOG_2021_02_10_19_35_37
 
 #include <Singleton.h>
 #include <logger/Logger.h>
@@ -39,3 +43,5 @@ public:
 #define MLOGI(p, ...) MLOG(ws::kLoggerLevelInfo, p, ##__VA_ARGS__)
 #define MLOGW(p, ...) MLOG(ws::kLoggerLevelWarn, p, ##__VA_ARGS__)
 #define MLOGE(p, ...) MLOG(ws::kLoggerLevelError, p, ##__VA_ARGS__)
+
+#endif//_H_DDKV_LOG_2021_02_10_19_35_37

@@ -10,7 +10,7 @@
 #include "ddkv.h"
 
 static void __init(void) {
-    MLOGT("Hello, DDKV {}", "is the most key-value system");
+    MLOGT("Hello, DDKV {}", "is the most fashion key-value db");
 }
 
 ws::i32 main(ws::i32 argc, ws::i8* argv[]) {
