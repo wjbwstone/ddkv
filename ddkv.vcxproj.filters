@@ -1,0 +1,129 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClInclude Include="BTree.h" />
+    <ClInclude Include="third\FastMutex.h">
+      <Filter>third</Filter>
+    </ClInclude>
+    <ClInclude Include="third\File.h">
+      <Filter>third</Filter>
+    </ClInclude>
+    <ClInclude Include="third\Format.h">
+      <Filter>third</Filter>
+    </ClInclude>
+    <ClInclude Include="third\RC4.h">
+      <Filter>third</Filter>
+    </ClInclude>
+    <ClInclude Include="third\ThreadPool.h">
+      <Filter>third</Filter>
+    </ClInclude>
+    <ClInclude Include="third\Types.h">
+      <Filter>third</Filter>
+    </ClInclude>
+    <ClInclude Include="third\Uncopyable.h">
+      <Filter>third</Filter>
+    </ClInclude>
+    <ClInclude Include="third\logger\AsyncFileSink.h">
+      <Filter>third\logger</Filter>
+    </ClInclude>
+    <ClInclude Include="third\logger\ConsoleSink.h">
+      <Filter>third\logger</Filter>
+    </ClInclude>
+    <ClInclude Include="third\logger\FileSink.h">
+      <Filter>third\logger</Filter>
+    </ClInclude>
+    <ClInclude Include="third\logger\LogCommon.h">
+      <Filter>third\logger</Filter>
+    </ClInclude>
+    <ClInclude Include="third\logger\LogData.h">
+      <Filter>third\logger</Filter>
+    </ClInclude>
+    <ClInclude Include="third\logger\Logger.h">
+      <Filter>third\logger</Filter>
+    </ClInclude>
+    <ClInclude Include="third\logger\LogSink.h">
+      <Filter>third\logger</Filter>
+    </ClInclude>
+    <ClInclude Include="third\logger\RollerFileSink.h">
+      <Filter>third\logger</Filter>
+    </ClInclude>
+    <ClInclude Include="third\fmt\color.h">
+      <Filter>third\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="third\fmt\compile.h">
+      <Filter>third\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="third\fmt\core.h">
+      <Filter>third\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="third\fmt\format.h">
+      <Filter>third\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="third\fmt\format-inl.h">
+      <Filter>third\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="third\fmt\locale.h">
+      <Filter>third\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="third\fmt\ostream.h">
+      <Filter>third\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="third\fmt\printf.h">
+      <Filter>third\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="third\fmt\ranges.h">
+      <Filter>third\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="ddkv.h" />
+    <ClInclude Include="third\Singleton.h">
+      <Filter>third</Filter>
+    </ClInclude>
+    <ClInclude Include="Log.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="BTree.cc" />
+    <ClCompile Include="ddkv.cc" />
+    <ClCompile Include="third\File.cc">
+      <Filter>third</Filter>
+    </ClCompile>
+    <ClCompile Include="third\RC4.cc">
+      <Filter>third</Filter>
+    </ClCompile>
+    <ClCompile Include="third\ThreadPool.cc">
+      <Filter>third</Filter>
+    </ClCompile>
+    <ClCompile Include="third\logger\AsyncFileSink.cc">
+      <Filter>third\logger</Filter>
+    </ClCompile>
+    <ClCompile Include="third\logger\ConsoleSink.cc">
+      <Filter>third\logger</Filter>
+    </ClCompile>
+    <ClCompile Include="third\logger\FileSink.cc">
+      <Filter>third\logger</Filter>
+    </ClCompile>
+    <ClCompile Include="third\logger\LogCommon.cc">
+      <Filter>third\logger</Filter>
+    </ClCompile>
+    <ClCompile Include="third\logger\LogData.cc">
+      <Filter>third\logger</Filter>
+    </ClCompile>
+    <ClCompile Include="third\logger\Logger.cc">
+      <Filter>third\logger</Filter>
+    </ClCompile>
+    <ClCompile Include="third\logger\RollerFileSink.cc">
+      <Filter>third\logger</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="third">
+      <UniqueIdentifier>{b51ed30b-c60c-48c9-b574-652519b5b7c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="third\logger">
+      <UniqueIdentifier>{3f8205c4-b260-4761-93ff-3090ef40a1a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="third\fmt">
+      <UniqueIdentifier>{819bd850-8fac-429c-8966-97dad9ea9bb2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,140 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|ARM">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM">
+      <Configuration>Release</Configuration>
+      <Platform>ARM</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x86">
+      <Configuration>Debug</Configuration>
+      <Platform>x86</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x86">
+      <Configuration>Release</Configuration>
+      <Platform>x86</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{f60a9cb3-f95b-4624-aaee-fb33f58e5c75}</ProjectGuid>
+    <Keyword>Linux</Keyword>
+    <RootNamespace>ddkv</RootNamespace>
+    <MinimumVisualStudioVersion>15.0</MinimumVisualStudioVersion>
+    <ApplicationType>Linux</ApplicationType>
+    <ApplicationTypeRevision>1.0</ApplicationTypeRevision>
+    <TargetLinuxPlatform>Generic</TargetLinuxPlatform>
+    <LinuxProjectType>{FC1A4D80-50E9-41DA-9192-61C0DBAA00D2}</LinuxProjectType>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <ConfigurationType>Makefile</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <ConfigurationType>Makefile</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <ConfigurationType>Makefile</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <ConfigurationType>Makefile</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <ConfigurationType>Application</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <ConfigurationType>Makefile</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <ConfigurationType>Makefile</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <ConfigurationType>Makefile</ConfigurationType>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Label="Shared" />
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <ItemGroup>
+    <ClInclude Include="BTree.h" />
+    <ClInclude Include="ddkv.h" />
+    <ClInclude Include="Log.h" />
+    <ClInclude Include="third\FastMutex.h" />
+    <ClInclude Include="third\File.h" />
+    <ClInclude Include="third\fmt\color.h" />
+    <ClInclude Include="third\fmt\compile.h" />
+    <ClInclude Include="third\fmt\core.h" />
+    <ClInclude Include="third\fmt\format-inl.h" />
+    <ClInclude Include="third\fmt\format.h" />
+    <ClInclude Include="third\fmt\locale.h" />
+    <ClInclude Include="third\fmt\ostream.h" />
+    <ClInclude Include="third\fmt\printf.h" />
+    <ClInclude Include="third\fmt\ranges.h" />
+    <ClInclude Include="third\Format.h" />
+    <ClInclude Include="third\logger\AsyncFileSink.h" />
+    <ClInclude Include="third\logger\ConsoleSink.h" />
+    <ClInclude Include="third\logger\FileSink.h" />
+    <ClInclude Include="third\logger\LogCommon.h" />
+    <ClInclude Include="third\logger\LogData.h" />
+    <ClInclude Include="third\logger\Logger.h" />
+    <ClInclude Include="third\logger\LogSink.h" />
+    <ClInclude Include="third\logger\RollerFileSink.h" />
+    <ClInclude Include="third\RC4.h" />
+    <ClInclude Include="third\Singleton.h" />
+    <ClInclude Include="third\ThreadPool.h" />
+    <ClInclude Include="third\Types.h" />
+    <ClInclude Include="third\Uncopyable.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="BTree.cc" />
+    <ClCompile Include="ddkv.cc" />
+    <ClCompile Include="main.cc" />
+    <ClCompile Include="third\File.cc" />
+    <ClCompile Include="third\logger\AsyncFileSink.cc" />
+    <ClCompile Include="third\logger\ConsoleSink.cc" />
+    <ClCompile Include="third\logger\FileSink.cc" />
+    <ClCompile Include="third\logger\LogCommon.cc" />
+    <ClCompile Include="third\logger\LogData.cc" />
+    <ClCompile Include="third\logger\Logger.cc" />
+    <ClCompile Include="third\logger\RollerFileSink.cc" />
+    <ClCompile Include="third\RC4.cc" />
+    <ClCompile Include="third\ThreadPool.cc" />
+  </ItemGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>./third;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <LibraryDependencies>pthread</LibraryDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
+</Project>
