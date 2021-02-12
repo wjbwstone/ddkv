@@ -20,8 +20,8 @@ public:
 	void close();
 
 public:
-	bool get(const ws::i8 *key);
-	bool set(const ws::i8 *key, const ws::i8 *value);
+	bool get(const ws::u64 key, ws::u64 &value);
+	bool set(const ws::u64 key, const ws::u64 value);
 
 private:
 	BTree _tree;

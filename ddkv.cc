@@ -7,7 +7,7 @@
 
 #include "ddkv.h"
 
-ddkv::ddkv() {
+ddkv::ddkv() : _tree(3) {
 
 }
 
@@ -23,10 +23,15 @@ void ddkv::close() {
 
 }
 
-bool ddkv::get(const ws::i8 *key) {
-	return false;
+bool ddkv::get(const ws::u64 key, ws::u64 &value) {
+	auto v = _tree.lookupRecord(_tree.lookupLeaf(key), key);
+	if (nullptr != v) {
+		value = *v;
+	}
+
+	return (nullptr != v);
 }
 
-bool ddkv::set(const ws::i8 *key, const ws::i8 *value) {
-	return false;
+bool ddkv::set(const ws::u64  key, const ws::u64 value) {
+	return _tree.insert(key, value);
 }
