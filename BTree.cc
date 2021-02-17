@@ -7,43 +7,190 @@
 
 #include "BTree.h"
 
-ws::u32 cutLength(ws::u32 length) {
-	if (length % 2 == 0)
-		return length / 2;
-	return length / 2 + 1;
+ws::u32 ceiling(ws::u32 order) {
+	if (order % 2 == 0)
+		return order / 2;
+	return order / 2 + 1;
 }
 
 class TreeNode {
 public:
-	TreeNode(ws::u32 order) :
-		_isLeaf(false),
-		_next(nullptr),
+	TreeNode(ws::u32 order, bool leaf = false) :
+		_isLeaf(leaf),
 		_parent(nullptr),
 		_keyCount(0) {
-		_keys = (ws::u64*)calloc(1, (order - 1 * sizeof(ws::u64)));
+		_sibling = nullptr;
+		_keys = (ws::u64*)calloc(1, (order * sizeof(ws::u64)));
 		_elements = (void **)calloc(1, (order * sizeof(void *)));
 	}
 
 	~TreeNode() {
+		free (_keys);
+		free (_elements);
+	}
+
+public:
+	void insert(ws::u64 key, void *element, ws::u32 order) {
 		for (ws::u32 i = 0; i < _keyCount; ++i) {
-			if (_isLeaf) {
-				free(_elements[i]);
-			} else {
-				auto leaf = (TreeNode *)_elements[i];
-				delete leaf;
+			if (key == _keys[i]) {
+				_elements[i] = element;
+				return;
 			}
 		}
 
-		free(_keys);
-		free(_elements);
+		assert(_keyCount < order);
+
+		ws::u32 pos = 0;
+		while (pos < _keyCount && _keys[pos] < key) {
+			pos++;
+		}
+
+		for (ws::u32 i = _keyCount; i > pos; --i) {
+			_keys[i] = _keys[i - 1];
+			_elements[i] = _elements[i - 1];
+		}
+
+		_keys[pos] = key;
+		_elements[pos] = element;
+
+		_keyCount++;
+	}
+
+	TreeNode *split(bool& insertLeft, ws::u64 insertKey, ws::u64 order) {
+		insertLeft = false;
+
+		ws::u32 pos = ceiling(order);
+		if ((0 != (order % 2)) && _keys[pos - 1] > insertKey) {
+			pos = pos - 1;
+			insertLeft = true;
+		}
+
+		auto node = new TreeNode(order);
+
+		node->_isLeaf = _isLeaf;
+		node->_sibling = _sibling;
+		_sibling = node;
+
+		ws::u32 count = 0;
+		for (ws::u32 i = pos; i < _keyCount; ++i) {
+			count++;
+			node->insert(_keys[i], _elements[i], order);
+			this->_keys[i] = 0;
+			this->_elements[i] = nullptr;
+		}
+
+		if (0 != count) {
+			this->_keyCount -= count;
+		}
+
+		if (!node->_isLeaf) {
+			for (ws::u32 i = 0; i < node->_keyCount; ++i) {
+				auto ch = (TreeNode *)node->_elements[i];
+				if (ch) {
+					ch->_parent = node;
+				}
+			}
+		}
+
+		node->_parent = this->_parent;
+	}
+
+	bool getInParentKey(ws::u64& pkey) {
+		if (!_parent) {
+			return false;
+		}
+
+		ws::u32 pos = 0;
+		while (pos < _parent->_keyCount &&
+			_parent->_elements[pos] != this) {
+			pos++;
+		}
+
+		if (pos == _parent->_keyCount) {
+			return false;
+		}
+
+		return _parent->_keys[pos];
+	}
+
+	void remove(ws::u64 key) {
+		ws::u32 pos = 0;
+		while (pos < _keyCount && _keys[pos] < key) {
+			pos++;
+		}
+
+		if (pos == _keyCount) {
+			return;
+		}
+
+		for (ws::u32 i = pos; i < (_keyCount - 1); ++i) {
+			_keys[i] = _keys[i + 1];
+			_elements[i] = _elements[i + 1];
+		}
+
+		_keyCount--;
+		_keys[_keyCount] = 0;
+		_elements[_keyCount] = nullptr;
+	}
+
+	void remove(void *element) {
+		ws::u32 pos = 0;
+		while (pos < _keyCount && _elements[pos] != element) {
+			pos++;
+		}
+
+		if (pos == _keyCount) {
+			return;
+		}
+
+		for (ws::u32 i = pos; i < (_keyCount - 1); ++i) {
+			_keys[i] = _keys[i + 1];
+			_elements[i] = _elements[i + 1];
+		}
+
+		_keyCount--;
+		_keys[_keyCount] = 0;
+		_elements[_keyCount] = nullptr;
+	}
+
+	void print(ws::u32 level = 0) {
+		printf("\n");
+
+		for (auto i = 0; i < level; ++i) {
+			printf(" ");
+		}
+
+		if (!_isLeaf) {
+			for (ws::u32 i = 0; i < _keyCount; ++i) {
+				printf("key %llu ", _keys[i]);
+			}
+
+			for (auto i = 0; i < level; ++i) {
+				printf(" ");
+			}
+
+			for (ws::u32 i = 0; i < _keyCount; ++i) {
+				auto v = (TreeNode *)_elements[i];
+				v->print(level + 1);
+			}
+
+		} else {
+			for (ws::u32 i = 0; i < _keyCount; ++i) {
+				printf("leaf %llu ", _keys[i]);
+			}
+		}
+	}
+
+	inline ws::u64 maxKey() const {
+		return _keys[_keyCount - 1];
 	}
 
 public:
 	bool _isLeaf;
-	ws::u64 *_keys;
-	TreeNode *_next;
+	ws::u64* _keys;
 	void **_elements;
 	TreeNode *_parent;
+	TreeNode *_sibling;
 	ws::u32 _keyCount;
 };
 
@@ -60,53 +207,27 @@ BTree::~BTree() {
 	}
 }
 
-bool BTree::remove(ws::u64 key) {
+void BTree::print() {
+	fflush(stdout);
+	if (!_root) {
+		printf("empty tree.\n");
+		return;
+	}
+
+	_root->print();
+	fflush(stdout);
+}
+
+bool BTree::earse(ws::u64 key) {
 	auto leaf = lookupLeaf(key);
 	auto record = lookupRecord(leaf, key);
 	if (nullptr != record && nullptr != leaf) {
-		_root = deleteEntry(_root, leaf, key, record);
+		_root = deleteEntry(_root, leaf, key);
+		delete record;
 		return true;
 	}
 
 	return false;
-}
-
-TreeNode *BTree::deleteEntryFromNode(TreeNode *node,
-	ws::u64 key, void *record) {
-	ws::u32 i = 0;
-	while (node->_keys[i] != key) {
-		++i;
-	}
-
-	for (++i; i < node->_keyCount; ++i) {
-		node->_keys[i - 1] = node->_keys[i];
-	}
-
-	ws::u32 numPointers = node->_isLeaf ? node->_keyCount :
-		node->_keyCount + 1;
-
-	i = 0;
-	while (node->_elements[i] != record) {
-		++i;
-	}
-
-	for (++i; i < numPointers; ++i) {
-		node->_elements[i - i] = node->_elements[i];
-	}
-
-	node->_keyCount--;
-
-	if (node->_isLeaf) {
-		for (i = node->_keyCount; i < _order - 1; ++i) {
-			node->_elements[i] = nullptr;
-		}
-	} else {
-		for (i = node->_keyCount + 1; i < _order; ++i) {
-			node->_elements[i] = nullptr;
-		}
-	}
-
-	return node;
 }
 
 TreeNode *BTree::adjustRoot(TreeNode *root) {
@@ -121,182 +242,120 @@ TreeNode *BTree::adjustRoot(TreeNode *root) {
 		newRoot->_parent = nullptr;
 	}
 
-	//free(root->_keys);
-	//free(root);
+	delete root;
 	return newRoot;
 }
 
-TreeNode *BTree::deleteEntry(TreeNode *root, TreeNode *node,
-	ws::u64 key, void *record) {
-	node = deleteEntryFromNode(node, key, record);
+TreeNode *BTree::getSibling(TreeNode *node) {
+	ws::u32 pos = 0;
+	while(pos < node->_parent->_keyCount &&
+		node->_parent->_elements[pos] != node) {
+		pos++;
+	}
+
+	assert(2 <= node->_parent->_keyCount);
+
+	if(0 == pos) {
+		return (TreeNode*)node->_parent->_elements[1];
+	}
+
+	auto left = (TreeNode *)node->_parent->_elements[pos - 1];
+	if((node->_parent->_keyCount) == (pos + 1)) {
+		return left;
+	}
+
+	if((left->_keyCount + node->_keyCount) < _order) {
+		return left;
+	}
+
+	return (TreeNode *)node->_parent->_elements[pos + 1];
+}
+
+TreeNode *BTree::deleteEntry(TreeNode *root, TreeNode *node, ws::u64 key) {
+	node->remove(key);
 	if (node == root) {
 		return adjustRoot(root);
 	}
 
-	ws::u32 minKeys = node->_isLeaf ? cutLength(_order - 1) :
-		cutLength(_order) - 1;
-	if (node->_keyCount >= minKeys)
+	if (node->_keyCount >= ceiling(_order))
 		return root;
 
-	ws::u32 neighborIndex = getNeighborIndex(node);
-	ws::u32 kPrimeIndex = neighborIndex == 0xFFFFFFFF ? 0 : neighborIndex;
-	ws::u64 kPrime = node->_parent->_keys[kPrimeIndex];
-	TreeNode *neighbor = (TreeNode*)(neighborIndex == 0xFFFFFFFF ?
-		node->_parent->_elements[1] :
-		node->_parent->_elements[neighborIndex]);
-	ws::u32 capacity = node->_isLeaf ? _order : _order - 1;
+	TreeNode *neighbor = getSibling(node);
 
-	if (neighbor->_keyCount + node->_keyCount < capacity) {
-		return coalesce(root, node, neighbor, neighborIndex, kPrime);
+	if ((neighbor->_keyCount + node->_keyCount) < _order) {
+		return merge(root, node, neighbor);
 	}
 
-	return redistribute(root, node, neighbor,
-		neighborIndex, kPrimeIndex, kPrime);
+	return redistribute(root, node, neighbor);
 }
 
-TreeNode *BTree::coalesce(TreeNode *root, TreeNode *node,
-	TreeNode *neighbor, ws::u32 neighborIndex, ws::u64 kPrime) {
-	TreeNode *temp;
-	if (neighborIndex == 0xFFFFFFFF) {
-		temp = node;
-		node = neighbor;
-		neighbor = temp;
+TreeNode *BTree::merge(TreeNode *root, TreeNode *node, TreeNode *neighbor) {
+	for (ws::u32 i = 0; i < node->_keyCount; i++) {
+		neighbor->insert(node->_keys[i], node->_elements[i], _order);
 	}
 
-	ws::u32 i = 0;
-	ws::u32 j = 0;
-	ws::u32 nodeEnd = 0;
-	ws::u32 neighborInsertIndex = neighbor->_keyCount;
+	neighbor->_sibling = node->_sibling;
 
-	if (!node->_isLeaf) {
-		neighbor->_keys[neighborInsertIndex] = kPrime;
-		neighbor->_keyCount++;
-
-		nodeEnd = node->_keyCount;
-
-		for (i = neighborInsertIndex + 1, j = 0;
-			j < nodeEnd; ++i, ++j) {
-			neighbor->_keys[i] = node->_keys[j];
-			neighbor->_keyCount++;
-			node->_keyCount--;
+	ws::u64 key = 0;
+	for (ws::u32 i = 0; i < node->_parent->_keyCount; i++) {
+		if(node == node->_parent->_elements[i]) {
+			key = node->_parent->_keys[i];
+			break;
 		}
-
-		neighbor->_elements[i] = node->_elements[j];
-
-		for (i = 0; i < neighbor->_keyCount + 1; ++i) {
-			temp = (TreeNode *)neighbor->_elements[i];
-			temp->_parent = neighbor;
-		}
-	} else {
-		for (i = neighborInsertIndex, j = 0; j < node->_keyCount;
-			++i, ++j) {
-			neighbor->_keys[i] = node->_keys[j];
-			neighbor->_elements[i] = node->_elements[j];
-			neighbor->_keyCount++;
-		}
-
-		neighbor->_elements[_order - 1] = node->_elements[_order - 1];
 	}
 
-	root = deleteEntry(root, node->_parent, kPrime, node);
-
-	//free(node->_keys);
-	//free(node->_elements);
-	//free(node);
+	root = deleteEntry(root, node->_parent, key);
 
 	delete node;
 	return root;
 }
 
-TreeNode *BTree::redistribute(TreeNode *root, TreeNode *node,
-	TreeNode *neighbor, ws::u32 neighborIndex,
-	ws::u32 kPrimeIndex, ws::u64 kPrime) {
-	ws::u32 i = 0;
-	TreeNode *temp = nullptr;
+TreeNode *BTree::redistribute(TreeNode *root, TreeNode *node, TreeNode *neighbor) {
+	TreeNode *parent = node->_parent;
 
-	if (0xFFFFFFFF == neighborIndex) {
-		if (!node->_isLeaf) {
-			node->_elements[node->_keyCount + 1] =
-				node->_elements[node->_keyCount];
-		}
-
-		for (i = node->_keyCount; i > 0; --i) {
-			node->_keys[i] = node->_keys[i - 1];
-			node->_elements[i] = node->_elements[i - 1];
-		}
-
-		if (!node->_isLeaf) {
-			node->_elements[0] = neighbor->_elements[neighbor->_keyCount];
-			temp = (TreeNode *)node->_elements[0];
-			temp->_parent = node;
-			neighbor->_elements[neighbor->_keyCount] = nullptr;
-			node->_keys[0] = kPrime;
-			node->_parent->_keys[kPrimeIndex] =
-				neighbor->_keys[neighbor->_keyCount - 1];
-		} else {
-			node->_elements[0] =
-				neighbor->_elements[neighbor->_keyCount - 1];
-			neighbor->_elements[neighbor->_keyCount - 1] = nullptr;
-			node->_keys[0] = neighbor->_keys[neighbor->_keyCount - 1];
-			node->_parent->_keys[kPrimeIndex] = node->_keys[0];
-		}
-
+	ws::u64 key = 0;
+	void *element = nullptr;
+	if(node->maxKey() > neighbor->maxKey()) {
+		key = neighbor->maxKey();
+		element = neighbor->_elements[neighbor->_keyCount - 1];
 	} else {
-		if (node->_isLeaf) {
-			node->_keys[node->_keyCount] = neighbor->_keys[0];
-			node->_elements[node->_keyCount] = neighbor->_elements[0];
-			node->_parent->_keys[kPrimeIndex] = neighbor->_keys[1];
-		} else {
-			node->_keys[node->_keyCount] = kPrime;
-			node->_elements[node->_keyCount + 1] = neighbor->_elements[0];
-			temp = (TreeNode *)node->_elements[node->_keyCount + 1];
-			temp->_parent = node;
-			node->_parent->_keys[kPrimeIndex] = neighbor->_keys[0];
-		}
-
-		for (i = 0; i < neighbor->_keyCount - 1; i++) {
-			neighbor->_keys[i] = neighbor->_keys[i + 1];
-			neighbor->_elements[i] = neighbor->_elements[i + 1];
-		}
-
-		if (!node->_isLeaf)
-			neighbor->_elements[i] = neighbor->_elements[i + 1];
+		key = neighbor->_keys[0];
+		element = neighbor->_elements[0];
 	}
 
-	node->_keyCount++;
-	neighbor->_keyCount--;
+	node->insert(key, element, _order);
+	neighbor->remove(key);
 
 	return root;
-}
-
-ws::u32 BTree::getNeighborIndex(TreeNode *node) {
-	for (ws::u32 i = 0; i < node->_parent->_keyCount; ++i) {
-		if (node->_parent->_elements[i] == node)
-			return i - 1;
-	}
-
-	assert(false);
-	return -1;
 }
 
 TreeNode *BTree::lookupLeaf(ws::u64 key) {
 	auto v = _root;
 	while (v && !v->_isLeaf) {
-		std::size_t i = 0;
+		ws::u32 i = 0;
 		for (; i < v->_keyCount; ++i) {
-			if (key < v->_keys[i]) {
+			if (key <= v->_keys[i]) {
 				break;
 			}
 		}
 
-		v = (TreeNode*)v->_elements[i];
+		if (i == v->_keyCount) {
+			v = (TreeNode *)v->_elements[i - 1];
+		} else {
+			v = (TreeNode*)v->_elements[i];
+		}
 	}
 
+	assert(nullptr != v);
 	return v;
 }
 
-ws::u64 *BTree::lookupRecord(TreeNode *node, ws::u64 key) {
-	auto v = node;
+ws::u64 *BTree::lookupRecord(TreeNode *leaf, ws::u64 key) {
+	auto v = leaf;
+	if (nullptr == leaf) {
+		return nullptr;
+	}
+
 	if (v && v->_isLeaf) {
 		for (ws::u32 i = 0; i < v->_keyCount; ++i) {
 			if (key == v->_keys[i]) {
@@ -308,232 +367,145 @@ ws::u64 *BTree::lookupRecord(TreeNode *node, ws::u64 key) {
 	return nullptr;
 }
 
-bool BTree::insert(const ws::u64 key, const ws::u64 value) {
+std::vector<ws::u64> BTree::gets(ws::u64 minKey, ws::u64 maxKey) {
+	std::vector<ws::u64> values;
+
+	auto v = lookupLeaf(minKey);
+	if (nullptr == v) {
+		return values;
+	}
+
+	assert(v->_isLeaf);
+
+	while (v && v->_isLeaf) {
+		for (ws::u32 i = 0; i < v->_keyCount; ++i) {
+			if (maxKey < v->_keys[i]) {
+				return values;
+			}
+
+			if (minKey <= v->_keys[i]) {
+				values.push_back(v->_keys[i]);
+			}
+		}
+
+		v = (TreeNode*)v->_sibling;
+	}
+
+	return values;
+}
+
+void BTree::insert(const ws::u64 key, const ws::u64 value) {
 	if (nullptr == _root) {
-		return buildTree(key, value);
+		buildRoot(key, value);
+		return;
 	}
 
 	auto leaf = lookupLeaf(key);
-	auto record = lookupRecord(leaf, key);
-	if (nullptr != record) {
-		*record = value;
-		return true;
+	auto element = lookupRecord(leaf, key);
+	if (nullptr != element) {
+		*element = value;
+		return;
 	}
 
-	if (leaf->_keyCount < _order - 1) {
-		return insertLeaf(leaf, key, value);
+	if (leaf->_keyCount < _order) {
+		leaf->insert(key, makeElements(value), _order);
+		updateNodeParentKey(leaf);
+		return;
 	}
 
-	return insert2LeafAfterSplit(_root, leaf, key, value);
+	_root = insert2LeafAfterSplit(_root, leaf, key, value);
 }
 
-void *BTree::makeRecord(ws::u64 value) {
+void BTree::updateNodeParentKey(TreeNode *node) {
+	auto parent = node->_parent;
+	if (!parent) {
+		return;
+	}
+
+	if (parent->maxKey() >= node->maxKey()) {
+		return;
+	}
+
+	parent->_keys[parent->_keyCount - 1] = node->maxKey();
+
+	updateNodeParentKey(parent);
+}
+
+void *BTree::makeElements(ws::u64 value) {
 	auto p = malloc(sizeof(ws::u64));
 	memcpy(p, &value, sizeof(ws::u64));
 	return p;
 }
 
-bool BTree::buildTree(ws::u64 key, ws::u64 value) {
+void BTree::buildRoot(ws::u64 key, ws::u64 value) {
 	assert(nullptr == _root);
-
-	auto root = new TreeNode(_order);
-
-	root->_keyCount++;
-	root->_isLeaf = true;
-	root->_keys[0] = key;
-	root->_elements[0] = makeRecord(value);
-
-	_root = root;
-	return true;
+	_root = new TreeNode(_order, true);
+	_root->insert(key, makeElements(value), _order);
 }
 
-bool BTree::insertLeaf(TreeNode *node, ws::u64 key, ws::u64 value) {
-	auto leaf = node;
-	assert(leaf);
+TreeNode *BTree::insert2LeafAfterSplit(TreeNode *root,
+	TreeNode *leaf, ws::u64 key, ws::u64 value) {
+	bool insertLeft = false;
+	auto newLeaf = leaf->split(insertLeft, key, _order);
 
-	ws::u32 pos = 0;
-	while (pos < leaf->_keyCount && leaf->_keys[pos] < key) {
-		pos++;
+	if (insertLeft) {
+		leaf->insert(key, makeElements(value), _order);
+	} else {
+		newLeaf->insert(key, makeElements(value), _order);
 	}
 
-	for (ws::u32 i = leaf->_keyCount; i > pos; --i) {
-		leaf->_keys[i] = leaf->_keys[i - 1];
-		leaf->_elements[i] = leaf->_elements[i - 1];
-	}
-
-	leaf->_keys[pos] = key;
-	leaf->_elements[pos] = makeRecord(value);
-	leaf->_keyCount++;
-
-	return true;
+	return insert2Parent(root, leaf, newLeaf, key);
 }
 
-bool BTree::insert2LeafAfterSplit(TreeNode *root, TreeNode *node,
-	ws::u64 key, ws::u64 value) {
-	assert(node);
-	assert(root);
-
-	auto leaf = node;
-	auto newLeaf = new TreeNode(_order);
-	auto temKeys = (ws::u64 *)malloc(_order * sizeof(ws::u64));
-	auto temRecord = (void **)malloc(_order * sizeof(void *));
-
-	ws::u32 pos = 0;
-	while (pos < _order - 1 && leaf->_keys[pos] < key) {
-		pos++;
-	}
-
-	for (ws::u32 i = 0, j = 0; i < leaf->_keyCount; ++i, ++j) {
-		if (j == pos) {
-			j++;
-		}
-
-		temKeys[j] = leaf->_keys[i];
-		temRecord[j] = leaf->_elements[i];
-	}
-
-	temKeys[pos] = key;
-	temRecord[pos] = makeRecord(value);
-
-	leaf->_keyCount = 0;
-
-	auto split = cutLength(_order - 1);
-
-	for (ws::u32 i = 0; i < split; ++i) {
-		leaf->_keys[i] = temKeys[i];
-		leaf->_elements[i] = temRecord[i];
-		leaf->_keyCount++;
-	}
-
-	for (ws::i32 i = split, j = 0; i < (ws::i32)_order; ++i, ++j) {
-		newLeaf->_keys[j] = temKeys[i];
-		newLeaf->_elements[j] = temRecord[i];
-		newLeaf->_keyCount++;
-	}
-
-	free(temKeys);
-	free(temRecord);
-
-	newLeaf->_elements[_order - 1] = leaf->_elements[_order - 1];
-	leaf->_elements[_order - 1] = newLeaf;
-
-	for (ws::u32 i = leaf->_keyCount; i < _order - 1; ++i) {
-		leaf->_elements[i] = nullptr;
-	}
-
-	for (ws::u32 i = newLeaf->_keyCount; i < _order - 1; ++i) {
-		newLeaf->_elements[i] = nullptr;
-	}
-
-	newLeaf->_parent = leaf->_parent;
-	return insert2Parent(_root, leaf, newLeaf->_keys[0], newLeaf);
-}
-
-bool BTree::insert2Parent(TreeNode *root, TreeNode *left,
-	ws::u64 key, TreeNode *right) {
-	auto parent = left->_parent;
-
+TreeNode * BTree::insert2Parent(TreeNode *root, TreeNode *oldNode,
+	TreeNode *newNode, ws::u64 insertKey) {
+	auto parent = oldNode->_parent;
 	if (nullptr == parent) {
-		return insert2NewRoot(left, key, right);
+		return insert2NewRoot(oldNode, newNode);
 	}
 
-	ws::u32 leftIndex = 0;
-	while (leftIndex <= parent->_keyCount &&
-		parent->_elements[leftIndex] != left) {
-		leftIndex++;
+	if (parent->_keyCount < _order) {
+		insert2Node(parent, oldNode);
+		insert2Node(parent, newNode);
+		updateNodeParentKey(parent);
+		return root;
 	}
 
-	if (parent->_keyCount < _order - 1) {
-		return insert2Node(root, parent, leftIndex, key, right);
-	}
-
-	return insert2NodeAfterSplit(root, parent, leftIndex, key, right);
+	return insert2NodeAfterSplit(root, parent, oldNode, newNode, insertKey);
 }
 
-bool BTree::insert2NewRoot(TreeNode *left, ws::u64 key,
-	TreeNode *right) {
+TreeNode *BTree::insert2NewRoot(TreeNode *left, TreeNode *right) {
 	auto root = new TreeNode(_order);
-	root->_keyCount++;
-	root->_keys[0] = key;
-	root->_elements[0] = left;
-	root->_elements[1] = right;
-	root->_parent = nullptr;
+	root->insert(left->maxKey(), left, _order);
+	root->insert(right->maxKey(), right, _order);
 	left->_parent = root;
 	right->_parent = root;
-	return true;
+	return root;
 }
 
-bool BTree::insert2Node(TreeNode *root, TreeNode *left,
-	ws::u32 leftIndex, ws::u64 key, TreeNode *right) {
-	auto parent = left->_parent;
-	for (ws::u32 i = parent->_keyCount; i > leftIndex; --i) {
-		parent->_elements[i + 1] = parent->_elements[i];
-		parent->_keys[i] = parent->_keys[i - 1];
-	}
-
-	parent->_elements[leftIndex + 1] = right;
-	parent->_keys[leftIndex] = key;
-	parent->_keyCount++;
-	return true;
+void BTree::insert2Node(TreeNode *node, TreeNode *sub) {
+	node->remove(sub);
+	node->insert(sub->maxKey(), sub, _order);
+	sub->_parent = node;
 }
 
-bool BTree::insert2NodeAfterSplit(TreeNode *root,
-	TreeNode *parent, ws::u32 leftIndex,
-	ws::u64 key, TreeNode *right) {
-	auto temKeys = (ws::u64 *)malloc(_order * sizeof(ws::u64));
-	auto temRecord = (void **)malloc(_order * sizeof(void *));
+TreeNode *BTree::insert2NodeAfterSplit(TreeNode *root,
+	TreeNode *node, TreeNode *left, TreeNode *right, ws::u64 insertKey) {
+	bool insertLeft = false;
+	auto newNode = node->split(insertLeft, insertKey, _order);
 
-	for (ws::u32 i = 0, j = 0; i < parent->_keyCount + 1; ++i, ++j) {
-		if (j == leftIndex + 1) {
-			j++;
+	if (insertLeft) {
+		insert2Node(node, left);
+		if (right->maxKey() < newNode->_keys[0]) {
+			insert2Node(node, right);
+		} else {
+			insert2Node(newNode, right);
 		}
 
-		temRecord[j] = parent->_elements[i];
+	} else {
+		insert2Node(newNode, left);
+		insert2Node(newNode, right);
 	}
 
-	for (ws::u32 i = 0, j = 0; i < parent->_keyCount; ++i, ++j) {
-		if (j == leftIndex) {
-			j++;
-		}
-
-		temKeys[j] = parent->_keys[i];
-	}
-
-	temRecord[leftIndex + 1] = right;
-	temKeys[leftIndex] = key;
-
-	ws::u32 split = cutLength(_order);
-
-	auto newLeaf = new TreeNode(_order);
-
-	parent->_keyCount = 0;
-	ws::u32 i = 0;
-	for (i = 0; i < split - 1; ++i) {
-		parent->_keys[i] = temKeys[i];
-		parent->_elements[i] = temRecord[i];
-		parent->_keyCount++;
-	}
-	parent->_elements[i] = temRecord[i];
-
-	ws::u32 j = 0;
-	for (++i, j = 0; i < _order; ++i, ++j) {
-		newLeaf->_keys[j] = temKeys[i];
-		newLeaf->_elements[j] = temRecord[i];
-		newLeaf->_keyCount++;
-	}
-	newLeaf->_elements[j] = temRecord[i];
-
-	auto kPrime = temKeys[split - 1];
-
-	free(temKeys);
-	free(temRecord);
-
-	newLeaf->_parent = parent->_parent;
-
-	for (i = 0; i <= newLeaf->_keyCount; ++i) {
-		auto child = (TreeNode*)newLeaf->_elements[i];
-		child->_parent = newLeaf;
-	}
-
-	return insert2Parent(_root, parent, kPrime, newLeaf);
+	return insert2Parent(root, node, newNode, insertKey);
 }

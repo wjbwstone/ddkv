@@ -10,6 +10,8 @@
 
 #include "BTree.h"
 
+#include <File.h>
+
 class ddkv {
 public:
 	ddkv();
@@ -23,8 +25,17 @@ public:
 	bool get(const ws::u64 key, ws::u64 &value);
 	bool set(const ws::u64 key, const ws::u64 value);
 
+	/**
+	 * Get the key scope in [minKey, maxKey]
+	 */
+	std::vector<ws::u64> gets(ws::u64 minKey, ws::u64 maxKey);
+
+public:
+	void printTree();
+
 private:
 	BTree _tree;
+	ws::File _dbfile;
 };
 
 

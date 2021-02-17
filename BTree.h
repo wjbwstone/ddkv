@@ -23,36 +23,31 @@ public:
 	BTree &operator=(const BTree &other) = delete;
 
 public:
-	bool remove(ws::u64 key);
+	void print();
+	bool earse(ws::u64 key);
 	TreeNode *lookupLeaf(ws::u64 key);
-	bool insert(ws::u64 key, ws::u64 value);
+	void insert(ws::u64 key, ws::u64 value);
 	ws::u64 *lookupRecord(TreeNode *leaf, ws::u64 key);
+	std::vector<ws::u64> gets(ws::u64 minKey, ws::u64 maxKey);
 
 protected:
-	void *makeRecord(ws::u64 value);
-	bool buildTree(ws::u64 key, ws::u64 value);
-	bool insertLeaf(TreeNode *leaf, ws::u64 key, ws::u64 value);
-	bool insert2LeafAfterSplit(TreeNode *root, TreeNode *leaf,
+	void *makeElements(ws::u64 value);
+	void buildRoot(ws::u64 key, ws::u64 value);
+	void updateNodeParentKey(TreeNode *node);
+	TreeNode *insert2LeafAfterSplit(TreeNode *root, TreeNode *leaf,
 		ws::u64 key, ws::u64 value);
-	bool insert2Parent(TreeNode *root, TreeNode *left,
-		ws::u64 key, TreeNode *right);
-	bool insert2Node(TreeNode *root, TreeNode *left,
-		ws::u32 leftIndex, ws::u64 key, TreeNode *right);
-	bool insert2NewRoot(TreeNode *left, ws::u64 key, TreeNode *right);
-	bool insert2NodeAfterSplit(TreeNode *root, TreeNode *parent,
-		ws::u32 leftIndex, ws::u64 key, TreeNode *right);
+	void insert2Node(TreeNode *node, TreeNode *left);
+	TreeNode *insert2NewRoot(TreeNode *left, TreeNode *right);
+	TreeNode *insert2Parent(TreeNode *root, TreeNode *oldNode,
+		TreeNode *newNode, ws::u64 insertKey);
+	TreeNode *insert2NodeAfterSplit(TreeNode *root, TreeNode *parent,
+		TreeNode *left, TreeNode *right, ws::u64 insertKey);
 
-	ws::u32 getNeighborIndex(TreeNode *node);
-	TreeNode *deleteEntry(TreeNode *root, TreeNode *node,
-		ws::u64 key, void *pointer);
-	TreeNode *deleteEntryFromNode(TreeNode *node,
-		ws::u64 key, void *record);
+	TreeNode *getSibling(TreeNode *node);
 	TreeNode *adjustRoot(TreeNode *root);
-	TreeNode *coalesce(TreeNode *root, TreeNode *node,
-		TreeNode *neighbor, ws::u32 neighborIndex, ws::u64 kPrime);
-	TreeNode *redistribute(TreeNode *root, TreeNode *node,
-		TreeNode *neighbor, ws::u32 neighborIndex,
-		ws::u32 kPrimeIndex, ws::u64 kPrime);
+	TreeNode *deleteEntry(TreeNode *root, TreeNode *node, ws::u64 key);
+	TreeNode *merge(TreeNode *root, TreeNode *node, TreeNode *neighbor);
+	TreeNode *redistribute(TreeNode *root, TreeNode *node, TreeNode *neighbor);
 
 private:
 	ws::u32 _order;

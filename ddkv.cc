@@ -7,6 +7,8 @@
 
 #include "ddkv.h"
 
+#include "Log.h"
+
 ddkv::ddkv() : _tree(3) {
 
 }
@@ -16,11 +18,21 @@ ddkv::~ddkv() {
 }
 
 bool ddkv::open(const ws::ustring &file) {
-	return false;
+	if (!_dbfile.open(file.c_str(), ws::File::kOpenAlway)) {
+		MLOGE("Open the file \"{}\" failed, errno is {}",
+			file, errno);
+		return false;
+	}
+
+	return true;
 }
 
 void ddkv::close() {
+	_dbfile.close();
+}
 
+std::vector<ws::u64> ddkv::gets(ws::u64 minKey, ws::u64 maxKey) {
+	return _tree.gets(minKey, maxKey);
 }
 
 bool ddkv::get(const ws::u64 key, ws::u64 &value) {
@@ -33,5 +45,11 @@ bool ddkv::get(const ws::u64 key, ws::u64 &value) {
 }
 
 bool ddkv::set(const ws::u64  key, const ws::u64 value) {
-	return _tree.insert(key, value);
+	_tree.insert(key, value);
+	return true;
+}
+
+void ddkv::printTree() {
+	printf("new tree~~~~~~~~~~~~~~~~~~~~~~\n");
+	_tree.print();
 }

@@ -13,6 +13,7 @@ public:
 	enum CreateMode {
 		kCreateNew = 1, //新建，存在返回失败
 		kOpenExisting = 2, //打开已存在的, 只能读取
+		kOpenAlway = 3, //
 	};
 
 	enum MoveType {

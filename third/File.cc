@@ -26,7 +26,9 @@ bool File::open(const i8* path, CreateMode mode /*= kOpenExisting*/) {
 	//Don't create the direcotry if not exist.
 
 	int flag = O_RDONLY;
-	if (mode != kOpenExisting) {
+	if (mode == kCreateNew) {
+		flag = O_RDWR | O_CREAT | O_EXCL;
+	} else if (mode == kOpenAlway) {
 		flag = O_RDWR | O_CREAT;
 	}
 
