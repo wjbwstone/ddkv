@@ -45,3 +45,4 @@ public:
 #define MLOGE(p, ...) MLOG(ws::kLoggerLevelError, p, ##__VA_ARGS__)
 
 #endif//_H_DDKV_LOG_2021_02_10_19_35_37
+
